@@ -1,14 +1,27 @@
 # csh2bash
-csh to bash script converter - work in progress.
+csh to bash script converter - A handy tool to approximately convert a given csh script to bash. 
+Work in progress.
 
 ## Supported constructs:
   - comment   => comment
   - echo      => echo
   - setenv    => export env variable
-  - set path  => export PATH variable
-  
+  - set assignments  => a=val
+  -  Operators   == => -eq etc
+  - Conditoinal if => Converts
+                      if (conditional) then 
+                       (body)
+                       else 
+                       (body) 
+                       endif
+                      To
+                       if [[ conditional ]] ; then
+                           (body)
+                        else
+                            (body)
+                        fi
+                        
 ## ToDo:
-  - conditionals
   - loops
   - case
   - external programs
