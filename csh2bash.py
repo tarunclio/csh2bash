@@ -1,11 +1,21 @@
 #!/bin/python 
 
+# Author Tarun
+# This script makes an approximation translation of a csh script to bash.
+# In the interest of safety it   places a header 
+# #/bin/bash -n  (-n for dry run) 
+
+# You must test the resulting output script yourself 
+# https://github.com/tarunclio/csh2bash
+# 
+
 import sys
 import os
 import logging
 import re
 
-_DEBUG = True
+_DEBUG = False
+#Uses a stack based algo to extract string from parantheses. Even nested ones 
 
 def getParan(s):  
     res = list()
@@ -33,7 +43,7 @@ log = logging.getLogger(__name__);
 if _DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 else:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR)
 
 if len(sys.argv) != 2:
     print("invalid number of argumnets: {}".format(len(sys.argv) - 1))
@@ -68,8 +78,6 @@ echoRegex = re.compile(r'(echo)\s+(.+)')  # echo regex
 
 def writeOut( outfp ,str):
   # lets filter out backticks
-  #echo "set a=\`ls -altr\`" | sed -E 's|(.*)`(.*)`(.*)|\1"$(\2)"\3|'
-  #re.sub(r"(\d.*?)\s(\d.*?)", r"\1 \2", string1
   backTickRegex = re.compile(r'(.*)`(.*)`(.*)')
   match = backTickRegex.search(str)
   
@@ -80,14 +88,16 @@ def writeOut( outfp ,str):
   
   
     # replace operators
-  str = str.replace(">=", "-ge")
+  str = str.replace(">=", " -ge ")
   str.replace(">", " -gt ") #risky - dont want to replace redirections
   str.replace("<", " -lt ") #risky - dont want to replace redirections
   
   str = str.replace("<=", " -le ")
-  str  = str.replace("==", "-eq")
-  
+  str  = str.replace("==", "-eq ")
+  str  = str.replace("!=", " -ne ")
   str = str.replace("$#argv","$#")
+  str = str.replace("$?"," ! -z ")
+
   outfp.write(str)
     
 with open(cshfile, 'r') as infp, open(bashfile, 'w') as outfp:
@@ -120,7 +130,7 @@ with open(cshfile, 'r') as infp, open(bashfile, 'w') as outfp:
         if match:
             log.debug("{}, if found: {}".format(cnt, match.group()))
             parenStr = getParan(match.group(2))
-            wrline = wrline + "if [[ {} ]]; then\n".format(parenStr)
+            wrline = wrline + "if [[ {} ]] ; then\n".format(parenStr)
             writeOut(outfp,wrline)
             continue
           
@@ -158,6 +168,8 @@ with open(cshfile, 'r') as infp, open(bashfile, 'w') as outfp:
         if blnkMatch or comMatch or echoMatch:
             log.debug("{}, blank/comment/echo found: {}".format(cnt, rdline))
         else:  # # unknown construct - issue warning and write to output file as is.
-            log.warning("{}, unknown/unsupported csh cmd found: {}".format(cnt, rdline))
+            log.warning("{}:{}, No Translation: {}".format(cshfile,cnt, rdline))
         wrline = wrline + rdline + "\n"
         outfp.writelines(wrline)
+    print("Translation of {} complete. Please see {}".format(cshfile,bashfile))
+    
