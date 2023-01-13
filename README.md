@@ -8,7 +8,7 @@ Work in progress.
   - setenv    => export env variable
   - set assignments  => a=val
   -  Operators   == => -eq etc
-  - Conditoinal if => Converts
+  - Conditional if => Converts
                       if (conditional) then 
                        (body)
                        else 
