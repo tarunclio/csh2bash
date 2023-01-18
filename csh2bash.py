@@ -93,8 +93,8 @@ def writeOut( outfp ,str):
   str.replace("<", " -lt ") #risky - dont want to replace redirections
   
   str = str.replace("<=", " -le ")
-  str  = str.replace("==", "-eq ")
-  str  = str.replace("!=", " -ne ")
+ # str  = str.replace("==", "-eq ") Uncomment ONLY if the == context is integer cmp
+  #str  = str.replace("!=", " -ne ")Uncomment ONLY if the == context is integer cmp
   str = str.replace("$#argv","$#")
   str = str.replace("$?"," ! -z ")
 
