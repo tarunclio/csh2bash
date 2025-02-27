@@ -1,11 +1,11 @@
 #!/bin/python 
 
-# Author Tarun
+# Author Tarun tarun.rajavelu@keysight.com
 # This script makes an approximation translation of a csh script to bash.
 # In the interest of safety it   places a header 
 # #/bin/bash -n  (-n for dry run) 
 
-# You must test the resulting output script yourself 
+# You MUST  test the resulting output script yourself 
 # https://github.com/tarunclio/csh2bash
 # 
 
@@ -13,6 +13,7 @@ import sys
 import os
 import logging
 import re
+import argparse
 
 _DEBUG = False
 #Uses a stack based algo to extract string from parantheses. Even nested ones 
@@ -44,22 +45,33 @@ if _DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.ERROR)
+    
+parser = argparse.ArgumentParser(description="Convert a C shell script to a Bash script.")
+parser.add_argument('-incsh', type=str, help='Path to the input C shell script file')
+parser.add_argument('-outbash', type=str, help='Path to the output Bash script file')
 
-if len(sys.argv) != 2:
-    print("invalid number of argumnets: {}".format(len(sys.argv) - 1))
-    print("usage: python3 csh2sh.py <input_csh_file>")
-    sys.exit()
+args = parser.parse_args()
 
-cshfile = sys.argv[1]
+# Check if both arguments are provided
+if not args.incsh or not args.outbash:
+    print("Error: Both -incsh and -outbash arguments must be specified.")
+    sys.exit(1)
+
+cshfile = args.incsh
+bashfile = args.outbash
+
+# Check if the input C shell script file exists
 if not os.path.isfile(cshfile):
-    print("input file {} does not exist! exiting ...".format(cshfile))
-    sys.exit()
+    print(f"Error: The input C shell script file '{cshfile}' does not exist.")
+    sys.exit(1)
 
-bashfile = cshfile.replace(".csh", ".sh")
-log.info("input file: {}, output file: {}".format(cshfile, bashfile))
-
+# Check if the output Bash script file already exists
 if os.path.isfile(bashfile):
-    log.warning("output file {} exists! overwriting ...".format(bashfile))
+    print(f"Error: The output Bash script file '{bashfile}' already exists.")
+    sys.exit(1)
+
+print(f"Input C shell script: {cshfile}")
+print(f"Output Bash script: {bashfile}")
 
 comRegex = re.compile(r'^#(.+)')  # comment regex
 cshRegex = re.compile(r'^#(\s*!\s*/bin/csh\s+-f)')  # csh header regex
@@ -108,7 +120,7 @@ with open(cshfile, 'r') as infp, open(bashfile, 'w') as outfp:
         comMatch = comRegex.search(rdline)
         # # add # prefix to wrline if commented line and continue processing rdline
         if comMatch:
-            wrline = "#"
+            wrline = ""
         else:
             wrline = ""
 
@@ -172,4 +184,5 @@ with open(cshfile, 'r') as infp, open(bashfile, 'w') as outfp:
         wrline = wrline + rdline + "\n"
         outfp.writelines(wrline)
     print("Translation of {} complete. Please see {}".format(cshfile,bashfile))
+    print("Hashbang of {} updated to have -n which on running will only perform syntax checking. Please double check , modify and remove -n after testing".format(bashfile))
     
